@@ -10,6 +10,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
@@ -88,81 +89,84 @@ namespace ImageProjectServer.ViewModels
 
         public System.Windows.Shapes.Rectangle rectangle { get; set; }
 
+        
+
+
+
+        public void Function()
+        {
+
+            string hostName = Dns.GetHostName(); // Retrive the Name of HOST
+            Console.WriteLine(hostName);
+            // Get the IP
+            string myIP = Dns.GetHostByName(hostName).AddressList[0].ToString();
+            IP_Address = myIP;
+            var ipAddress = IPAddress.Parse($"{IP_Address}"); // Change IP
+            var port = 27001; // doesn't work, use 80;
+            using (var socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp))
+            {
+                var endPoint = new IPEndPoint(ipAddress, port);
+                socket.Bind(endPoint);
+                socket.Listen(10);
+                MessageBox.Show($"Listen Over {socket.LocalEndPoint}");
+
+                //var client = socket.Accept();
+
+                //var length = 0;
+                //var bytes = new byte[500000];
+
+                //length = client.Receive(bytes);
+                //var a = ToImage(bytes);
+                //ImageBrush imageBrush = new ImageBrush();
+                //imageBrush.ImageSource = a;
+                //AllPaths2.Add(new Item { Image = a });
+                //var msg = Encoding.UTF8.GetString(bytes);
+                //MessageBox.Show("Sended");
+
+
+
+                while (true)
+                {
+                    var client = socket.Accept();
+                    var length = 0;
+                    var bytes = new byte[500000];
+
+                    length = client.Receive(bytes);
+                    var img = ToImage(bytes);
+                    Item item = new Item();
+                    item.Image = img;
+
+                    //App.Current.Dispatcher.Invoke((Action)delegate
+                    //{
+                    //    AllPaths2.Add(new Item { Image = img });
+                    //});
+
+                    AllPaths2= new ObservableCollection<Item>();
+                    Application.Current.Dispatcher.BeginInvoke(new Action(() => AllPaths2.Add(item)));
+
+                    var uiContext = SynchronizationContext.Current;
+                    //uiContext.Send(x => _matchObsCollection.Add(match), null);
+
+                    //uiContext.Send(x => AllPaths2.Add(item), null);
+
+                    MessageBox.Show("Sended");
+
+
+
+                }
+
+            }
+        }
 
 
         public MainViewModel()
         {
 
-            AllPaths2 = new ObservableCollection<Item>();
 
             StartCommand = new RelayCommand(s =>
             {
-                string hostName = Dns.GetHostName(); // Retrive the Name of HOST
-                Console.WriteLine(hostName);
-                // Get the IP
-                string myIP = Dns.GetHostByName(hostName).AddressList[0].ToString();
-                IP_Address = myIP;
-                var ipAddress = IPAddress.Parse($"{IP_Address}"); // Change IP
-                var port = 27001; // doesn't work, use 80;
-                using (var socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp))
-                {
-                    var endPoint = new IPEndPoint(ipAddress, port);
-                    socket.Bind(endPoint);
-                    socket.Listen(10);
-                    MessageBox.Show($"Listen Over {socket.LocalEndPoint}");
-
-                    //var client = socket.Accept();
-
-                    //var length = 0;
-                    //var bytes = new byte[500000];
-
-                    //length = client.Receive(bytes);
-                    //var a = ToImage(bytes);
-                    //ImageBrush imageBrush = new ImageBrush();
-                    //imageBrush.ImageSource = a;
-                    //AllPaths2.Add(new Item { Image = a });
-                    //var msg = Encoding.UTF8.GetString(bytes);
-                    //MessageBox.Show("Sended");
-
-
-
-                    while (true)
-                    {
-
-                        var client = socket.Accept();
-
-
-
-                        var length = 0;
-                        var bytes = new byte[500000];
-                        length = client.Receive(bytes);
-                        var img = ToImage(bytes);
-                        var a = img;
-                        AllPaths2.Add(new Item { Image = img });
-                        MessageBox.Show("Sended");
-
-
-
-
-                    }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-                }
+                Thread thread = new Thread(() => { Function(); });
+                thread.Start();
             });
         }
 
