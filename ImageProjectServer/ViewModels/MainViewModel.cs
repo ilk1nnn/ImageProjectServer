@@ -10,12 +10,14 @@ using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
+using System.Windows.Threading;
 
 namespace ImageProjectServer.ViewModels
 {
@@ -108,19 +110,39 @@ namespace ImageProjectServer.ViewModels
                     socket.Bind(endPoint);
                     socket.Listen(10);
                     MessageBox.Show($"Listen Over {socket.LocalEndPoint}");
-                  
-                        var client = socket.Accept();
 
+                    //var client = socket.Accept();
+
+                    //var length = 0;
+                    //var bytes = new byte[500000];
+
+                    //length = client.Receive(bytes);
+                    //var a = ToImage(bytes);
+                    //ImageBrush imageBrush = new ImageBrush();
+                    //imageBrush.ImageSource = a;
+                    //AllPaths2.Add(new Item { Image = a });
+                    //var msg = Encoding.UTF8.GetString(bytes);
+                    //MessageBox.Show("Sended");
+
+
+
+
+                    
+                        var client = socket.Accept();
                         var length = 0;
                         var bytes = new byte[500000];
-                       
-                            length = client.Receive(bytes);
-                            var a = ToImage(bytes);
-                            ImageBrush imageBrush = new ImageBrush();
-                            imageBrush.ImageSource = a;
-                            AllPaths2.Add(new Item { Image = a });
-                            var msg = Encoding.UTF8.GetString(bytes);
-                            MessageBox.Show("Sended");
+                        length = client.Receive(bytes);
+                        var img = ToImage(bytes);
+
+
+                        var a = img;
+
+                        AllPaths2.Add(new Item { Image = img });
+                        MessageBox.Show("Sended");
+
+
+
+
 
 
 
