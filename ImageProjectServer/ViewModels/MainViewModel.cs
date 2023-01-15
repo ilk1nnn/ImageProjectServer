@@ -126,19 +126,31 @@ namespace ImageProjectServer.ViewModels
 
 
 
+                    while (true)
+                    {
 
-                    
                         var client = socket.Accept();
+
+
+
                         var length = 0;
                         var bytes = new byte[500000];
                         length = client.Receive(bytes);
                         var img = ToImage(bytes);
-
-
                         var a = img;
-
                         AllPaths2.Add(new Item { Image = img });
                         MessageBox.Show("Sended");
+
+
+
+
+                    }
+
+
+
+
+
+
 
 
 
