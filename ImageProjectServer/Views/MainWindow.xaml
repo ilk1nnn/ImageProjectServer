@@ -24,8 +24,14 @@
 
 
         <Grid Grid.Row="1">
-            <ListView Name="listview" ItemsSource="{Binding AllPaths2}">
-                 
+            <ListView Name="listview" ScrollViewer.HorizontalScrollBarVisibility="Disabled" ItemsSource="{Binding AllPaths2,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}">
+                <ListView.ItemTemplate>
+                    <DataTemplate >
+                        <StackPanel>
+                            <Image Width="300" Height="300" Source="{Binding Image}"></Image>
+                        </StackPanel>
+                    </DataTemplate>
+                </ListView.ItemTemplate>
             </ListView>
             <!--<Rectangle>
                 <Rectangle.Fill>

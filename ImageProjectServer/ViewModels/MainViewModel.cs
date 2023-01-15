@@ -1,4 +1,5 @@
 ﻿using ImageProjectServer.Commands;
+using ImageProjectServer.Models;
 using System;
 using System.Buffers.Text;
 using System.Collections.Generic;
@@ -22,9 +23,9 @@ namespace ImageProjectServer.ViewModels
     {
         public RelayCommand StartCommand { get; set; }
 
-        private ObservableCollection<ImageBrush> allpaths2;
+        private ObservableCollection<Item> allpaths2;
 
-        public ObservableCollection<ImageBrush> AllPaths2
+        public ObservableCollection<Item> AllPaths2
         {
             get { return allpaths2; }
             set { allpaths2 = value; OnPropertyChanged(); }
@@ -64,6 +65,13 @@ namespace ImageProjectServer.ViewModels
 
 
 
+        private Item item;
+
+        public Item Item
+        {
+            get { return item; }
+            set { item = value; OnPropertyChanged(); }
+        }
 
         public string IP_Address { get; set; }
 
@@ -83,7 +91,7 @@ namespace ImageProjectServer.ViewModels
         public MainViewModel()
         {
 
-            AllPaths2 = new ObservableCollection<ImageBrush>();
+            AllPaths2 = new ObservableCollection<Item>();
 
             StartCommand = new RelayCommand(s =>
             {
@@ -100,22 +108,23 @@ namespace ImageProjectServer.ViewModels
                     socket.Bind(endPoint);
                     socket.Listen(10);
                     MessageBox.Show($"Listen Over {socket.LocalEndPoint}");
+                  
+                        var client = socket.Accept();
+
+                        var length = 0;
+                        var bytes = new byte[500000];
+                       
+                            length = client.Receive(bytes);
+                            var a = ToImage(bytes);
+                            ImageBrush imageBrush = new ImageBrush();
+                            imageBrush.ImageSource = a;
+                            AllPaths2.Add(new Item { Image = a });
+                            var msg = Encoding.UTF8.GetString(bytes);
+                            MessageBox.Show("Sended");
 
 
-                    var client = socket.Accept();
-                    var length = 0;
-                    var bytes = new byte[500000];
-
-                    length = client.Receive(bytes);
-                    var a = ToImage(bytes);
-                    ImageBrush imageBrush = new ImageBrush();
-                    imageBrush.ImageSource = a;
-                   // Img.ImageSource = a;
-                    AllPaths2.Add(imageBrush);
-                    var msg = Encoding.UTF8.GetString(bytes);
 
 
-                    MessageBox.Show("Sended");
 
 
 
