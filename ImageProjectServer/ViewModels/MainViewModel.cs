@@ -26,14 +26,16 @@ namespace ImageProjectServer.ViewModels
     public class MainViewModel : BaseViewModel
     {
         public RelayCommand StartCommand { get; set; }
+        private static object _lock = new object();
+
+
 
         private ObservableCollection<Item> allpaths2;
 
-        private static object _lock = new object();
         public ObservableCollection<Item> AllPaths2
         {
             get { return allpaths2; }
-            set { allpaths2 = value; OnPropertyChanged(); }
+            set { allpaths2 = value; OnPropertyChanged(); BindingOperations.EnableCollectionSynchronization(allpaths2, _lock); }
         }
 
         public Bitmap stringToImage(string inputString)
@@ -125,17 +127,31 @@ namespace ImageProjectServer.ViewModels
                 //MessageBox.Show("Sended");
 
 
+                AllPaths2 = new ObservableCollection<Item>();
 
                 while (true)
                 {
                     var client = socket.Accept();
 
-                    var length = 0;
-                    var bytes = new byte[500000];
-                    length = client.Receive(bytes);
-                    var img = ToImage(bytes);
-                    Item item = new Item();
-                    item.Image = img;
+                    Task.Delay(100);
+                    Task.Run(() =>
+                    {
+
+                        var length = 0;
+                        var bytes = new byte[500000];
+                        length = client.Receive(bytes);
+                        var img = ToImage(bytes);
+                        Item item = new Item();
+                        item.Image = img;
+
+
+                        App.Current.Dispatcher.BeginInvoke((Action)delegate
+                        {
+                            AllPaths2.Add(new Item { Image = img });
+                        });
+
+
+                    });
 
                     //App.Current.Dispatcher.Invoke((Action)delegate
                     //{
@@ -164,18 +180,6 @@ namespace ImageProjectServer.ViewModels
 
 
 
-                    Task.Factory.StartNew(() =>
-                    {
-                        App.Current.Dispatcher.Invoke((Action)delegate
-                        {
-                            MessageBox.Show("Sended");
-                            AllPaths2.Add(new Item { Image = img });
-                        });
-                    });
-
-
-
-
 
 
                 }
@@ -186,11 +190,9 @@ namespace ImageProjectServer.ViewModels
 
         public MainViewModel()
         {
-            AllPaths2 = new ObservableCollection<Item>();
 
             StartCommand = new RelayCommand(s =>
             {
-
                 Task.Run(() => { Function(); });
             });
         }
