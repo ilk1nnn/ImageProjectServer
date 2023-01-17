@@ -15,6 +15,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Data;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
@@ -28,6 +29,7 @@ namespace ImageProjectServer.ViewModels
 
         private ObservableCollection<Item> allpaths2;
 
+        private static object _lock = new object();
         public ObservableCollection<Item> AllPaths2
         {
             get { return allpaths2; }
@@ -89,13 +91,12 @@ namespace ImageProjectServer.ViewModels
 
         public System.Windows.Shapes.Rectangle rectangle { get; set; }
 
-        
+
 
 
 
         public void Function()
         {
-
             string hostName = Dns.GetHostName(); // Retrive the Name of HOST
             Console.WriteLine(hostName);
             // Get the IP
@@ -128,9 +129,9 @@ namespace ImageProjectServer.ViewModels
                 while (true)
                 {
                     var client = socket.Accept();
+
                     var length = 0;
                     var bytes = new byte[500000];
-
                     length = client.Receive(bytes);
                     var img = ToImage(bytes);
                     Item item = new Item();
@@ -141,15 +142,39 @@ namespace ImageProjectServer.ViewModels
                     //    AllPaths2.Add(new Item { Image = img });
                     //});
 
-                    AllPaths2= new ObservableCollection<Item>();
-                    Application.Current.Dispatcher.BeginInvoke(new Action(() => AllPaths2.Add(item)));
+                    //_matchObsCollection = new ObservableCollection<EfesBet.DataContract.GetMatchDetailsDC>();
+                    //BindingOperations.EnableCollectionSynchronization(_matchObsCollection, _lock);
 
-                    var uiContext = SynchronizationContext.Current;
+
+                    //var uiContext = TaskScheduler.FromCurrentSynchronizationContext();
+                    //var uiContext2 = SynchronizationContext.Current;
+                    //Task.Factory.StartNew(() => { uiContext2.Send(x => AllPaths2.Add(item),null); }, CancellationToken.None, TaskCreationOptions.None, uiContext);
+
+                    //BindingOperations.EnableCollectionSynchronization(AllPaths2, _lock);
+
+                    //App.Current.Dispatcher.Invoke((Action)delegate // <--- HERE
+                    //{
+                    //    _matchObsCollection.Add(match);
+                    //});
+
+                    //AllPaths2.Add(item);
                     //uiContext.Send(x => _matchObsCollection.Add(match), null);
 
                     //uiContext.Send(x => AllPaths2.Add(item), null);
 
-                    MessageBox.Show("Sended");
+
+
+                    Task.Factory.StartNew(() =>
+                    {
+                        App.Current.Dispatcher.Invoke((Action)delegate
+                        {
+                            MessageBox.Show("Sended");
+                            AllPaths2.Add(new Item { Image = img });
+                        });
+                    });
+
+
+
 
 
 
@@ -161,12 +186,12 @@ namespace ImageProjectServer.ViewModels
 
         public MainViewModel()
         {
-
+            AllPaths2 = new ObservableCollection<Item>();
 
             StartCommand = new RelayCommand(s =>
             {
-                Thread thread = new Thread(() => { Function(); });
-                thread.Start();
+
+                Task.Run(() => { Function(); });
             });
         }
 
