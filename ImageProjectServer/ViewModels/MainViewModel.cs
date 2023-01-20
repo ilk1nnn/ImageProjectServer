@@ -89,6 +89,8 @@ namespace ImageProjectServer.ViewModels
         }
 
 
+
+
         public System.Windows.Shapes.Rectangle rectangle { get; set; }
 
 
@@ -125,8 +127,8 @@ namespace ImageProjectServer.ViewModels
                 //var msg = Encoding.UTF8.GetString(bytes);
                 //MessageBox.Show("Sended");
 
-
                 AllPaths2 = new ObservableCollection<Item>();
+
                 while (true)
                 {
 
@@ -137,21 +139,28 @@ namespace ImageProjectServer.ViewModels
                     var bytes = new byte[500000];
 
 
-                    length = client.Receive(bytes);
-                    var a = ToImage(bytes);
-                    ImageBrush imageBrush = new ImageBrush();
-                    imageBrush.ImageSource = a;
 
-                    App.Current.Dispatcher.BeginInvoke((Action)(() =>
+
+                    //Action<Item> addMethod = AllPaths2.Add;
+                    //Application.Current.Dispatcher.BeginInvoke(addMethod, item);
+
+                    App.Current.Dispatcher.Invoke((Action)(() =>
                     {
-                        AllPaths2.Add(new Item { Image = a });
-                        //MessageBox.Show("Sended 2");
+                        length = client.Receive(bytes);
+                        var a = ToImage(bytes);
+
+                        ImageBrush imageBrush = new ImageBrush();
+                        imageBrush.ImageSource = a;
+                        Item item = new Item();
+                        item.Image = a;
+                        AllPaths2.Add(item);
+                        MessageBox.Show("Sended");
                     }));
 
 
 
-                    var msg = Encoding.UTF8.GetString(bytes);
-                    MessageBox.Show("Sended");
+
+
 
 
 
@@ -186,6 +195,9 @@ namespace ImageProjectServer.ViewModels
 
                 }
 
+
+
+
             }
 
         }
@@ -196,11 +208,16 @@ namespace ImageProjectServer.ViewModels
 
             StartCommand = new RelayCommand(s =>
             {
+
                 Task.Factory.StartNew(() =>
                 {
+
                     Function();
 
                 });
+
+
+
             });
         }
 
