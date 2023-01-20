@@ -26,16 +26,14 @@ namespace ImageProjectServer.ViewModels
     public class MainViewModel : BaseViewModel
     {
         public RelayCommand StartCommand { get; set; }
-        private static object _lock = new object();
 
-
-
+        private readonly object _CollectionLock = new object();
         private ObservableCollection<Item> allpaths2;
 
         public ObservableCollection<Item> AllPaths2
         {
             get { return allpaths2; }
-            set { allpaths2 = value; OnPropertyChanged(); BindingOperations.EnableCollectionSynchronization(allpaths2, _lock); }
+            set { allpaths2 = value; OnPropertyChanged(); BindingOperations.EnableCollectionSynchronization(allpaths2, _CollectionLock); }
         }
 
         public Bitmap stringToImage(string inputString)
@@ -106,6 +104,7 @@ namespace ImageProjectServer.ViewModels
             IP_Address = myIP;
             var ipAddress = IPAddress.Parse($"{IP_Address}"); // Change IP
             var port = 27001; // doesn't work, use 80;
+
             using (var socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp))
             {
                 var endPoint = new IPEndPoint(ipAddress, port);
@@ -128,30 +127,33 @@ namespace ImageProjectServer.ViewModels
 
 
                 AllPaths2 = new ObservableCollection<Item>();
-
                 while (true)
                 {
+
+
                     var client = socket.Accept();
 
-                    Task.Delay(100);
-                    Task.Run(() =>
+                    var length = 0;
+                    var bytes = new byte[500000];
+
+
+                    length = client.Receive(bytes);
+                    var a = ToImage(bytes);
+                    ImageBrush imageBrush = new ImageBrush();
+                    imageBrush.ImageSource = a;
+
+                    App.Current.Dispatcher.BeginInvoke((Action)(() =>
                     {
-
-                        var length = 0;
-                        var bytes = new byte[500000];
-                        length = client.Receive(bytes);
-                        var img = ToImage(bytes);
-                        Item item = new Item();
-                        item.Image = img;
+                        AllPaths2.Add(new Item { Image = a });
+                        //MessageBox.Show("Sended 2");
+                    }));
 
 
-                        App.Current.Dispatcher.BeginInvoke((Action)delegate
-                        {
-                            AllPaths2.Add(new Item { Image = img });
-                        });
+
+                    var msg = Encoding.UTF8.GetString(bytes);
+                    MessageBox.Show("Sended");
 
 
-                    });
 
                     //App.Current.Dispatcher.Invoke((Action)delegate
                     //{
@@ -185,6 +187,7 @@ namespace ImageProjectServer.ViewModels
                 }
 
             }
+
         }
 
 
@@ -193,7 +196,11 @@ namespace ImageProjectServer.ViewModels
 
             StartCommand = new RelayCommand(s =>
             {
-                Task.Run(() => { Function(); });
+                Task.Factory.StartNew(() =>
+                {
+                    Function();
+
+                });
             });
         }
 
